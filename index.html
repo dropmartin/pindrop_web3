@@ -1,0 +1,1230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Mappr • Web3 Map</title>
+  <meta name="description" content="Mappr — turn photos into precise map pins. Extract GPS from EXIF, publish, and share beautifully." />
+  <link rel="icon" href="static/logo.png" />
+  <style>
+    :root {
+      --bg: #0b0b0c;
+      --card: #111214;
+      --muted: #9aa0a6;
+      --text: #e6e7eb;
+      --accent: #0a84ff;
+      --ring: rgba(10,132,255,.35);
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius: 18px;
+      --maxw: 1120px;
+    }
+    
+    * { box-sizing: border-box; }
+    
+    html, body { 
+      height: 100%; 
+      scroll-behavior: smooth;
+    }
+    
+    body {
+      margin: 0; 
+      background: linear-gradient(180deg, #0a0a0b 0%, #0b0c10 100%);
+      color: var(--text); 
+      font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, Arial, Apple SD Gothic Neo, Noto Sans, sans-serif;
+      -webkit-font-smoothing: antialiased; 
+      -moz-osx-font-smoothing: grayscale;
+      overflow-x: hidden;
+    }
+    
+    a { color: inherit; text-decoration: none; }
+
+    /* Placeholder for missing images */
+    .img-placeholder {
+      background: linear-gradient(135deg, var(--accent), #00d4ff);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+      font-size: clamp(16px, 4vw, 24px);
+      text-align: center;
+      border-radius: inherit;
+    }
+
+    /* Nav */
+    .nav { 
+      position: sticky; 
+      top: 0; 
+      z-index: 30; 
+      backdrop-filter: saturate(180%) blur(20px); 
+      background: rgba(10,10,12,.8); 
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    
+    .nav-inner { 
+      display: flex; 
+      align-items: center; 
+      gap: 16px; 
+      max-width: var(--maxw); 
+      margin: 0 auto; 
+      padding: 12px 20px;
+    }
+    
+    .brand { 
+      display: flex; 
+      align-items: center; 
+      gap: 10px; 
+      font-weight: 700; 
+      letter-spacing: .2px;
+    }
+    
+    .brand-logo {
+      width: 48px; 
+      height: 48px; 
+      border-radius: 7px;
+    }
+    
+    .brand span { font-size: 18px; }
+    .spacer { flex: 1; }
+    
+    .nav a.btn { 
+      padding: 10px 14px; 
+      border-radius: 12px; 
+      border: 1px solid rgba(255,255,255,.08); 
+      transition: .2s background, border-color;
+      font-size: 14px;
+    }
+    
+    .nav a.btn:hover { 
+      background: rgba(255,255,255,.06); 
+      border-color: rgba(255,255,255,.18);
+    }
+    
+    .cta { 
+      background: var(--accent); 
+      color: white; 
+      border-color: transparent;
+    }
+    
+    .cta:hover { filter: brightness(1.05); }
+
+    /* Mobile nav */
+    .mobile-nav-toggle { 
+      display: none; 
+      background: none; 
+      border: none; 
+      color: var(--text); 
+      font-size: 24px; 
+      cursor: pointer; 
+      padding: 8px;
+    }
+    
+    .nav-menu { 
+      display: flex; 
+      align-items: center; 
+      gap: 16px;
+    }
+
+    @media (max-width: 768px) {
+      .nav-inner { padding: 12px 16px; }
+      .brand span { font-size: 16px; }
+      .mobile-nav-toggle { display: block; }
+      .nav-menu { 
+        display: none; 
+        position: absolute; 
+        top: 100%; 
+        left: 0; 
+        right: 0; 
+        background: rgba(10,10,12,.95); 
+        backdrop-filter: blur(20px); 
+        flex-direction: column; 
+        padding: 16px; 
+        gap: 12px; 
+        border-bottom: 1px solid rgba(255,255,255,.06);
+      }
+      .nav-menu.active { display: flex; }
+      .nav a.btn { 
+        width: 100%; 
+        text-align: center; 
+        padding: 12px;
+      }
+    }
+
+    /* Hero */
+    .hero { 
+      max-width: var(--maxw); 
+      margin: 0 auto; 
+      padding: 72px 20px 30px; 
+      position: relative;
+    }
+    
+    .eyebrow { 
+      display: inline-flex; 
+      align-items: center; 
+      gap: 8px; 
+      padding: 6px 10px; 
+      background: rgba(255,255,255,.06); 
+      border: 1px solid rgba(255,255,255,.12); 
+      border-radius: 999px; 
+      font-size: 12px; 
+      color: var(--muted);
+    }
+    
+    .h1 { 
+      font-weight: 800; 
+      font-size: clamp(32px, 6vw, 64px); 
+      letter-spacing: -.02em; 
+      line-height: 1.05; 
+      margin: 16px 0 14px;
+    }
+    
+    .lead { 
+      font-size: clamp(16px, 2.2vw, 20px); 
+      color: #b8bdc8; 
+      max-width: 820px;
+    }
+
+    .hero-media { 
+      margin-top: 34px; 
+      position: relative;
+    }
+    
+    .card { 
+      background: linear-gradient(180deg, #0f1013, #0b0c0f); 
+      border: 1px solid rgba(255,255,255,.08); 
+      border-radius: var(--radius); 
+      box-shadow: var(--shadow);
+    }
+    
+    .frame { 
+      position: relative; 
+      overflow: hidden; 
+      border-radius: calc(var(--radius) - 2px); 
+      border: 1px solid rgba(255,255,255,.06);
+    }
+    
+    .frame img, .frame video { 
+      display: block; 
+      width: 100%; 
+      height: auto;
+    }
+
+    @media (max-width: 768px) {
+      .hero { padding: 40px 16px 20px; }
+      .eyebrow { font-size: 11px; padding: 5px 8px; }
+    }
+
+    /* Partners */
+    .partners {
+      max-width: var(--maxw);
+      margin: 40px auto 0;
+      padding: 0 20px 20px;
+    }
+    
+    .partners-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      align-items: center;
+      color: #c7cbd3;
+    }
+    
+    .partners .label {
+      color: var(--muted);
+      font-size: 13px;
+      margin-right: 8px;
+    }
+    
+    .logo-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.06);
+      height: 32px;
+      font-weight: 600;
+    }
+    
+    .logo-pill:hover {
+      background: rgba(255, 255, 255, 0.12);
+      transition: background 0.2s ease;
+    }
+
+    @media (max-width: 768px) {
+      .partners { padding: 0 16px 16px; }
+      .partners-row { justify-content: center; }
+      .logo-pill { 
+        height: 28px; 
+        padding: 4px 10px; 
+        font-size: 12px;
+      }
+    }
+
+    /* Sections */
+    section { 
+      max-width: var(--maxw); 
+      margin: 90px auto 0; 
+      padding: 0 20px;
+    }
+    
+    .grid { 
+      display: grid; 
+      grid-template-columns: repeat(12, 1fr); 
+      gap: 20px;
+    }
+    
+    .col-6 { grid-column: span 6; }
+    .col-5 { grid-column: span 5; }
+    .col-7 { grid-column: span 7; }
+    .col-4 { grid-column: span 4; }
+    .col-12 { grid-column: 1 / -1; }
+    
+    @media (max-width: 900px) { 
+      .col-6, .col-5, .col-7, .col-4 { grid-column: 1 / -1; } 
+      section { padding: 0 16px; margin: 60px auto 0; }
+    }
+
+    .feature { 
+      padding: 22px; 
+      background: var(--card); 
+      border: 1px solid rgba(255,255,255,.08); 
+      border-radius: 16px;
+    }
+    
+    .feature h3 { 
+      margin: 6px 0 6px; 
+      font-size: 22px;
+    }
+    
+    .muted { color: var(--muted); }
+
+    @media (max-width: 768px) {
+      .feature { padding: 18px; }
+      .feature h3 { font-size: 20px; }
+    }
+
+    .how { counter-reset: step; }
+    
+    .step { 
+      padding: 22px; 
+      background: var(--card); 
+      border: 1px solid rgba(255,255,255,.08); 
+      border-radius: 16px; 
+      position: relative;
+    }
+    
+    .step:before { 
+      counter-increment: step; 
+      content: counter(step); 
+      position: absolute; 
+      top: -14px; 
+      left: -14px; 
+      width: 36px; 
+      height: 36px; 
+      border-radius: 9px; 
+      background: var(--accent); 
+      color: #fff; 
+      display: grid; 
+      place-items: center; 
+      font-weight: 700; 
+      box-shadow: 0 6px 20px var(--ring);
+    }
+
+    @media (max-width: 768px) {
+      .step { padding: 18px; margin-top: 20px; }
+      .step:before { 
+        width: 32px; 
+        height: 32px; 
+        top: -10px; 
+        left: -10px; 
+        font-size: 14px;
+      }
+    }
+
+    /* Zoomable images */
+    .zoomable { 
+      cursor: grab; 
+      transition: transform .15s ease; 
+      touch-action: pan-y;
+    }
+    
+    .zoomable:active { cursor: grabbing; }
+
+    /* Footer */
+    footer { 
+      margin-top: 100px; 
+      padding: 24px 16px 50px; 
+      border-top: 1px solid rgba(255,255,255,.08); 
+      color: #aab0ba;
+    }
+    
+    .foot-inner { 
+      max-width: var(--maxw); 
+      margin: 0 auto; 
+      display: flex; 
+      align-items: center; 
+      gap: 12px; 
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 768px) {
+      footer { margin-top: 60px; padding: 20px 12px 40px; }
+      .foot-inner { 
+        justify-content: center; 
+        text-align: center; 
+        font-size: 14px;
+      }
+    }
+
+    /* Animations */
+    .reveal { 
+      opacity: 0; 
+      transform: translateY(16px); 
+      transition: opacity .6s ease, transform .6s ease;
+    }
+    
+    .reveal.in { 
+      opacity: 1; 
+      transform: none;
+    }
+
+    /* Buttons */
+    .button { 
+      display: inline-flex; 
+      align-items: center; 
+      gap: 10px; 
+      padding: 12px 16px; 
+      border-radius: 14px; 
+      border: 1px solid rgba(255,255,255,.08); 
+      background: rgba(255,255,255,.05); 
+      transition: .2s; 
+      font-weight: 600;
+    }
+    
+    .button:hover { background: rgba(255,255,255,.09); }
+    .button.primary { 
+      background: var(--accent); 
+      border-color: transparent; 
+      color: white;
+    }
+
+    @media (max-width: 768px) {
+      .button { 
+        padding: 14px 20px; 
+        font-size: 16px; 
+        width: 100%; 
+        justify-content: center;
+      }
+    }
+
+    /* Responsive helpers */
+    .center { text-align: center; }
+    .stack-10 > * { margin-top: 10px; }
+
+    @media (max-width: 768px) {
+      .stack-10 > * { margin-top: 12px; }
+    }
+
+    /* Image masks */
+    .rounded-xl { border-radius: 22px; }
+    .shadow-xl { box-shadow: var(--shadow); }
+
+    /* Contract Address card */
+    .mono { 
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    }
+    
+    .contract-wrap { margin-top: 18px; }
+    
+    .contract-card {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 18px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.16);
+      border-radius: 16px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 8px 30px rgba(0,0,0,.35);
+      transition: transform .2s ease, background .2s ease, border-color .2s ease;
+      font-weight: 600;
+      font-size: clamp(14px, 2.6vw, 22px);
+      line-height: 1.2;
+      max-width: 100%;
+    }
+    
+    .contract-card:hover { 
+      transform: translateY(-1px); 
+      background: rgba(255,255,255,0.10); 
+      border-color: rgba(255,255,255,0.22);
+    }
+    
+    .ca-logo { 
+      width: 28px; 
+      height: 28px; 
+      border-radius: 8px; 
+      flex: none;
+    }
+    
+    .ca-label { 
+      color: var(--muted); 
+      font-size: clamp(12px, 1.6vw, 14px); 
+      font-weight: 500; 
+      letter-spacing: .2px;
+    }
+    
+    .ca-address { 
+      white-space: nowrap; 
+      overflow: hidden; 
+      text-overflow: ellipsis; 
+      max-width: min(62vw, 560px);
+    }
+    
+    .ca-actions { 
+      display: inline-flex; 
+      align-items: center; 
+      gap: 8px; 
+      margin-left: 6px;
+    }
+    
+    .ca-btn { 
+      display: inline-flex; 
+      align-items: center; 
+      justify-content: center; 
+      height: 36px; 
+      padding: 0 12px; 
+      border-radius: 10px; 
+      border: 1px solid rgba(255,255,255,.16); 
+      background: rgba(255,255,255,.06); 
+      color: #fff; 
+      font-weight: 600; 
+      cursor: pointer; 
+      transition: background .2s ease, transform .15s ease;
+    }
+    
+    .ca-btn:hover { 
+      background: rgba(255,255,255,.12); 
+      transform: translateY(-1px);
+    }
+    
+    .ca-btn.primary { 
+      background: var(--accent); 
+      border-color: transparent;
+    }
+    
+    .ca-btn.primary:hover { filter: brightness(1.06); }
+
+    @media (max-width: 768px) {
+      .contract-card { 
+        flex-direction: column; 
+        gap: 8px; 
+        padding: 14px; 
+        text-align: center;
+        width: 100%;
+        max-width: none;
+      }
+      .ca-actions { 
+        width: 100%; 
+        justify-content: center; 
+        margin-left: 0; 
+        flex-wrap: wrap;
+      }
+      .ca-btn { 
+        flex: 1; 
+        min-width: 120px; 
+        padding: 12px 16px;
+        font-size: 14px;
+      }
+      .ca-address { 
+        max-width: 280px; 
+        font-size: 14px;
+      }
+    }
+
+    /* Floating Logo */
+    .floating-logo {
+      position: fixed;
+      top: 20%;
+      right: -120px;
+      width: 240px;
+      height: 240px;
+      opacity: 0.08;
+      z-index: 1;
+      pointer-events: none;
+      animation: float 8s ease-in-out infinite;
+      filter: blur(0.5px);
+    }
+
+    .floating-logo img {
+      width: 100%;
+      height: 100%;
+      border-radius: 32px;
+      transform: rotate(-15deg);
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px) rotate(-15deg) scale(1); }
+      50% { transform: translateY(-20px) rotate(-12deg) scale(1.05); }
+    }
+
+    .floating-logo-2 {
+      position: fixed;
+      bottom: 15%;
+      left: -100px;
+      width: 180px;
+      height: 180px;
+      opacity: 0.06;
+      z-index: 1;
+      pointer-events: none;
+      animation: float2 12s ease-in-out infinite;
+      filter: blur(0.8px);
+    }
+
+    .floating-logo-2 img {
+      width: 100%;
+      height: 100%;
+      border-radius: 24px;
+      transform: rotate(25deg);
+    }
+
+    @keyframes float2 {
+      0%, 100% { transform: translateY(0px) rotate(25deg) scale(1); }
+      33% { transform: translateY(-15px) rotate(20deg) scale(0.95); }
+      66% { transform: translateY(10px) rotate(30deg) scale(1.1); }
+    }
+
+    .hero-floating-logo {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 400px;
+      height: 400px;
+      opacity: 0.04;
+      z-index: 2;
+      pointer-events: none;
+      transform: translate(-50%, -50%) rotate(-8deg);
+      animation: heroFloat 15s ease-in-out infinite;
+      filter: blur(1px);
+    }
+
+    .hero-floating-logo img {
+      width: 100%;
+      height: 100%;
+      border-radius: 48px;
+    }
+
+    @keyframes heroFloat {
+      0%, 100% { transform: translate(-50%, -50%) rotate(-8deg) scale(1); }
+      25% { transform: translate(-48%, -52%) rotate(-5deg) scale(1.02); }
+      50% { transform: translate(-52%, -48%) rotate(-10deg) scale(0.98); }
+      75% { transform: translate(-50%, -50%) rotate(-6deg) scale(1.01); }
+    }
+
+    /* Mobile floating logo adjustments */
+    @media (max-width: 768px) {
+      .floating-logo { 
+        width: 140px; 
+        height: 140px; 
+        right: -70px; 
+        top: 15%;
+        opacity: 0.06;
+        animation: floatMobile 10s ease-in-out infinite;
+      }
+      .floating-logo img { font-size: 28px; }
+      
+      .floating-logo-2 { 
+        width: 100px; 
+        height: 100px; 
+        left: -50px; 
+        bottom: 20%;
+        opacity: 0.04;
+        animation: float2Mobile 8s ease-in-out infinite;
+      }
+      .floating-logo-2 img { font-size: 20px; }
+      
+      .hero-floating-logo { 
+        width: 200px; 
+        height: 200px; 
+        opacity: 0.03;
+        animation: heroFloatMobile 12s ease-in-out infinite;
+      }
+      .hero-floating-logo img { font-size: 36px; }
+
+      @keyframes floatMobile {
+        0%, 100% { transform: translateY(0px) rotate(-10deg) scale(1); }
+        50% { transform: translateY(-15px) rotate(-8deg) scale(1.02); }
+      }
+
+      @keyframes float2Mobile {
+        0%, 100% { transform: translateY(0px) rotate(20deg) scale(1); }
+        50% { transform: translateY(-10px) rotate(25deg) scale(0.98); }
+      }
+
+      @keyframes heroFloatMobile {
+        0%, 100% { transform: translate(-50%, -50%) rotate(-5deg) scale(1); }
+        50% { transform: translate(-50%, -50%) rotate(-3deg) scale(1.01); }
+      }
+    }
+
+    /* Touch optimizations */
+    @media (max-width: 768px) {
+      .zoomable { 
+        touch-action: manipulation; 
+        -webkit-user-select: none;
+        user-select: none;
+      }
+    }
+
+    /* Device-specific optimizations */
+    @media (hover: none) and (pointer: coarse) {
+      .button:hover, .ca-btn:hover, .nav a.btn:hover, .logo-pill:hover { 
+        background: initial; 
+        transform: initial; 
+        filter: initial; 
+        border-color: initial; 
+      }
+      .button:active, .ca-btn:active, .nav a.btn:active { 
+        transform: scale(0.98); 
+        transition: transform 0.1s ease; 
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Floating Logo Elements -->
+  <div class="floating-logo">
+    <img src="static/logo.png" alt="Mappr floating logo" />
+  </div>
+  <div class="floating-logo-2">
+    <img src="static/logo.png" alt="Mappr floating logo" />
+  </div>
+
+  <!-- NAV -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <a class="brand" href="#top">
+        <img src="static/logo.png" alt="Mappr logo" class="brand-logo" />
+        <span>Mappr - The first Web3-based map</span>
+      </a>
+      <div class="spacer"></div>
+      <button class="mobile-nav-toggle" onclick="toggleMobileNav()">☰</button>
+      <div class="nav-menu" id="navMenu">
+        <a class="btn" href="#features">Features</a>
+        <a class="btn" href="#how">How it works</a>
+        <a class="btn" href="#example">Example</a>
+        <a class="btn cta" href="#get">Get Started</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <header class="hero" id="top">
+    <div class="hero-floating-logo">
+      <img src="static/logo.png" alt="Mappr floating logo" />
+    </div>
+    <div class="eyebrow">🌍 Turn photos into precise map pins</div>
+    <h1 class="h1">Pin your moments. Share your world.</h1>
+    <p class="lead">Mappr extracts GPS coordinates from photo EXIF, places them on a beautiful dark map, and lets you publish sharable location cards. Build a living map of your life</p>
+
+    <div class="hero-media card reveal" style="padding:14px" data-reveal>
+      <div class="frame rounded-xl">
+        <video src="static/example.mp4" autoplay muted loop playsinline style="width:100%; height:auto; display:block; border-radius:inherit;"></video>
+      </div>
+    </div>
+
+    <!-- Contract Address card -->
+    <div class="contract-wrap">
+      <div class="contract-card">
+        <img src="static/logo.png" alt="Token" class="ca-logo" />
+        <div>
+          <div class="ca-label">Contract</div>
+          <div class="ca-address mono" id="contractAddress" title="soon">soon</div>
+        </div>
+        <div class="ca-actions">
+          <button class="ca-btn" type="button" onclick="copyCA()">Copy</button>
+          <a class="ca-btn primary" target="_blank" href="https://dexscreener.com">View on Dexscreener</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="partners">
+      <div class="partners-row">
+        <span class="label">Powered by</span>
+        <span class="logo-pill" title="Base">
+          <img src="static/base.png" alt="Base" style="height: 32px; border-radius: 16px; background: rgba(10,132,255,.08); padding: 4px 12px;">
+        </span>
+        <span class="logo-pill" title="Dexscreener">
+          <img src="static/dex.png" alt="Dexscreener" style="height: 32px; border-radius: 16px; background: rgba(255,255,255,.06); padding: 4px 12px;">
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <!-- FEATURES -->
+  <section id="features">
+    <div class="grid">
+      <div class="col-5">
+        <h2 style="font-size:clamp(24px, 4vw, 34px); line-height:1.1; margin:0 0 10px">A clean, friendly way to publish places</h2>
+        <p class="muted">Create rich pins with photos, coordinates, notes, and optional tokens. Curate collections and share to the global map.</p>
+        <div class="stack-10" style="margin-top:18px">
+          <a class="button primary" href="#get">Get started — it's free</a>
+          <a class="button" href="#example">See a live example</a>
+        </div>
+      </div>
+      <div class="col-7">
+        <div class="grid">
+          <div class="col-6 feature reveal" data-reveal>
+            <h3>EXIF GPS Auto‑Pin</h3>
+            <p class="muted">Drop photos and we'll place them precisely on a dark, high‑contrast map. If a photo lacks GPS, we'll let you know before posting.</p>
+          </div>
+          <div class="col-6 feature reveal" data-reveal>
+            <h3>Community & Collections</h3>
+            <p class="muted">Share your pin, discover trending spots worldwide.</p>
+          </div>
+          <div class="col-6 feature reveal" data-reveal>
+            <h3>Deploy your own coin</h3>
+            <p class="muted">Turn your personal pins into coins of your own memories.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section id="how">
+    <h2 style="font-size:clamp(24px, 4vw, 34px); line-height:1.1; margin:0 0 20px">How it works</h2>
+    <div class="grid how">
+      <div class="col-6 step reveal" data-reveal>
+        <h3>1. Upload a photo</h3>
+        <p class="muted">Drag in a photo or drop it from your phone. We process EXIF securely in your browser.</p>
+      </div>
+      <div class="col-6 step reveal" data-reveal>
+        <h3>2. Auto‑extract GPS</h3>
+        <p class="muted">If EXIF GPS exists, we place a precise pin. No GPS? You can still add a note or try another photo.</p>
+      </div>
+      <div class="col-6 step reveal" data-reveal>
+        <h3>3. Deploy your pin coin</h3>
+        <p class="muted">Create a beautiful card with photo, coordinates, and ticker.</p>
+      </div>
+      <div class="col-6 step reveal" data-reveal>
+        <h3>4. Wait</h3>
+        <p class="muted">Photos go through a brief review process before coins are issued. This is to prevent the creation of explicit-content coins. Enjoy exploring the Web3-based map.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- EXAMPLE (with drag-to-zoom) -->
+  <section id="example">
+    <div class="grid">
+      <div class="col-7">
+        <div class="card reveal" data-reveal style="padding:14px">
+          <div class="frame rounded-xl">
+            <img src="static/example.png" alt="Example pin" class="zoomable" data-zoom-min="1" data-zoom-max="2.8" />
+          </div>
+        </div>
+      </div>
+      <div class="col-5">
+        <h2 style="font-size:clamp(20px, 3.5vw, 28px); margin:0 0 10px">A pin worth sharing</h2>
+        <p class="muted">Location cards highlight what matters: photo, coordinates, and a coin ticker.</p>
+        <ul class="muted">
+          <li>Responsive, high‑DPI images</li>
+          <li>One‑tap copy of coordinates</li>
+          <li>Easy coin distribution</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- GALLERY (everyday images via Unsplash) -->
+  <section id="gallery">
+    <h2 style="font-size:clamp(20px, 3.5vw, 28px); margin:0 0 14px">Everyday moments, beautifully pinned</h2>
+    <div class="grid">
+      <div class="col-4">
+        <div class="frame rounded-xl shadow-xl reveal" data-reveal>
+          <img class="zoomable" data-zoom-min="1" data-zoom-max="2.2" alt="Coffee shop"
+               src="https://images.unsplash.com/photo-1504754524776-8f4f37790ca0?q=80&w=1600&auto=format&fit=crop" 
+               loading="lazy" />
+        </div>
+      </div>
+      <div class="col-4">
+        <div class="frame rounded-xl shadow-xl reveal" data-reveal>
+          <img class="zoomable" data-zoom-min="1" data-zoom-max="2.2" alt="Hiking trail"
+               src="https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=1600&auto=format&fit=crop" 
+               loading="lazy" />
+        </div>
+      </div>
+      <div class="col-4">
+        <div class="frame rounded-xl shadow-xl reveal" data-reveal>
+          <img class="zoomable" data-zoom-min="1" data-zoom-max="2.2" alt="City night"
+               src="https://images.unsplash.com/photo-1505761671935-60b3a7427bad?q=80&w=1600&auto=format&fit=crop" 
+               loading="lazy" />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section id="get" class="center">
+    <div class="card reveal" data-reveal style="padding:28px 22px">
+      <h2 style="font-size:clamp(22px, 4vw, 30px); margin:0 0 10px">Start pinning in seconds</h2>
+      <p class="muted" style="margin:0 0 16px">Drop a photo. We'll do the rest. Your map awaits.</p>
+      <div class="stack-10">
+        <a class="button primary" href="#top">Open Mappr</a>
+        <a class="button" href="#how">Learn more</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="foot-inner">
+      <img src="static/logo.png" alt="Mappr" width="20" height="20" style="border-radius:6px" />
+      <span>© <span id="year"></span> Mappr</span>
+      <span style="opacity:.5">•</span>
+      <a href="#" class="muted">Privacy</a>
+      <a href="#" class="muted">Terms</a>
+    </div>
+  </footer>
+
+  <script>
+    // Year
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // Mobile navigation toggle
+    function toggleMobileNav() {
+      const navMenu = document.getElementById('navMenu');
+      navMenu.classList.toggle('active');
+    }
+
+    // Close mobile nav when clicking on a link
+    document.querySelectorAll('.nav-menu a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('navMenu').classList.remove('active');
+      });
+    });
+
+    // Close mobile nav when clicking outside
+    document.addEventListener('click', (e) => {
+      const nav = document.querySelector('.nav');
+      const navMenu = document.getElementById('navMenu');
+      const toggle = document.querySelector('.mobile-nav-toggle');
+      
+      if (!nav.contains(e.target) && navMenu.classList.contains('active')) {
+        navMenu.classList.remove('active');
+      }
+    });
+
+    // Device detection and dynamic adjustments
+    function isMobile() {
+      return window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    }
+
+    function isTouch() {
+      return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    }
+
+    // Dynamic floating logo adjustments based on device
+    function adjustFloatingLogos() {
+      const floatingLogo1 = document.querySelector('.floating-logo');
+      const floatingLogo2 = document.querySelector('.floating-logo-2');
+      const heroLogo = document.querySelector('.hero-floating-logo');
+
+      if (isMobile()) {
+        // Reduce animation intensity on mobile for better performance
+        floatingLogo1.style.animationDuration = '12s';
+        floatingLogo2.style.animationDuration = '10s';
+        heroLogo.style.animationDuration = '15s';
+        
+        // Reduce opacity further on mobile to prevent distraction
+        floatingLogo1.style.opacity = '0.04';
+        floatingLogo2.style.opacity = '0.03';
+        heroLogo.style.opacity = '0.02';
+      }
+    }
+
+    // Performance optimization for mobile
+    function optimizeForMobile() {
+      if (isMobile()) {
+        // Reduce animation complexity on mobile devices
+        document.documentElement.style.setProperty('--shadow', '0 4px 15px rgba(0,0,0,.25)');
+        
+        // Disable certain animations on very small screens
+        if (window.innerWidth < 480) {
+          const style = document.createElement('style');
+          style.textContent = `
+            .floating-logo, .floating-logo-2, .hero-floating-logo {
+              animation-duration: 20s !important;
+              opacity: 0.02 !important;
+            }
+          `;
+          document.head.appendChild(style);
+        }
+      }
+    }
+
+    // Reveal on scroll
+    const revealables = Array.from(document.querySelectorAll('[data-reveal]'));
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => { 
+        if (e.isIntersecting) { 
+          e.target.classList.add('in'); 
+          io.unobserve(e.target); 
+        } 
+      });
+    }, { threshold: isMobile() ? 0.1 : 0.15 });
+    
+    revealables.forEach(el => io.observe(el));
+
+    // Enhanced drag-to-zoom for .zoomable images with mobile support
+    const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
+
+    function attachZoom(el) {
+      let scale = 1;
+      const min = parseFloat(el.dataset.zoomMin || '1');
+      const max = parseFloat(el.dataset.zoomMax || '2.5');
+      let startY = 0;
+      let startScale = 1;
+      let active = false;
+
+      const apply = () => { 
+        el.style.transform = `scale(${scale})`; 
+        el.style.transformOrigin = 'center center'; 
+      }
+
+      const down = (y) => { 
+        active = true; 
+        startY = y; 
+        startScale = scale; 
+        el.style.willChange = 'transform'; 
+      }
+
+      const move = (y) => { 
+        if (!active) return; 
+        const dy = startY - y; 
+        const delta = dy / (isMobile() ? 200 : 300); 
+        scale = clamp(startScale + delta, min, max); 
+        apply(); 
+      }
+
+      const up = () => { 
+        active = false; 
+        el.style.willChange = 'auto'; 
+      }
+
+      // Mouse events
+      el.addEventListener('mousedown', e => { down(e.clientY) });
+      window.addEventListener('mousemove', e => { move(e.clientY) });
+      window.addEventListener('mouseup', up);
+
+      // Enhanced touch support for mobile
+      el.addEventListener('touchstart', e => { 
+        if (e.touches.length === 1) {
+          e.preventDefault();
+          down(e.touches[0].clientY);
+        }
+      }, { passive: false });
+
+      el.addEventListener('touchmove', e => { 
+        if (e.touches.length === 1 && active) {
+          e.preventDefault();
+          move(e.touches[0].clientY);
+        }
+      }, { passive: false });
+
+      el.addEventListener('touchend', e => {
+        e.preventDefault();
+        up();
+      }, { passive: false });
+
+      // Double-tap to reset (mobile) / Double-click (desktop)
+      let tapCount = 0;
+      const resetZoom = () => { scale = 1; apply(); }
+
+      el.addEventListener('dblclick', resetZoom);
+      
+      el.addEventListener('touchend', () => {
+        tapCount++;
+        if (tapCount === 1) {
+          setTimeout(() => {
+            if (tapCount === 2) {
+              resetZoom();
+            }
+            tapCount = 0;
+          }, 300);
+        }
+      });
+    }
+
+    document.querySelectorAll('.zoomable').forEach(attachZoom);
+
+    // Copy CA helper with enhanced mobile feedback
+    function copyCA() {
+      const el = document.getElementById('contractAddress');
+      const value = el.getAttribute('title') || el.textContent.trim();
+      
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(value).then(() => {
+          showCopyFeedback(el, 'Copied!');
+        }).catch(() => {
+          fallbackCopy(value, el);
+        });
+      } else {
+        fallbackCopy(value, el);
+      }
+    }
+
+    function showCopyFeedback(el, message) {
+      const prev = el.textContent;
+      el.textContent = message;
+      el.style.color = 'var(--accent)';
+      
+      setTimeout(() => { 
+        el.textContent = prev; 
+        el.style.color = '';
+      }, isMobile() ? 1200 : 900);
+    }
+
+    function fallbackCopy(text, el) {
+      // Fallback for older browsers or when clipboard API fails
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      textArea.style.position = 'fixed';
+      textArea.style.opacity = '0';
+      document.body.appendChild(textArea);
+      textArea.select();
+      
+      try {
+        document.execCommand('copy');
+        showCopyFeedback(el, 'Copied!');
+      } catch (err) {
+        showCopyFeedback(el, 'Copy failed');
+      }
+      
+      document.body.removeChild(textArea);
+    }
+
+    // Resize handler for dynamic adjustments
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        adjustFloatingLogos();
+        optimizeForMobile();
+      }, 250);
+    });
+
+    // Orientation change handler for mobile
+    window.addEventListener('orientationchange', () => {
+      setTimeout(() => {
+        adjustFloatingLogos();
+        optimizeForMobile();
+      }, 500);
+    });
+
+    // Initialize dynamic adjustments
+    document.addEventListener('DOMContentLoaded', () => {
+      adjustFloatingLogos();
+      optimizeForMobile();
+      
+      // Add touch class for devices that support touch
+      if (isTouch()) {
+        document.body.classList.add('touch-device');
+      }
+      
+      // Add mobile class for mobile devices
+      if (isMobile()) {
+        document.body.classList.add('mobile-device');
+      }
+    });
+
+    // Prevent zoom on double-tap for iOS Safari (except on zoomable images)
+    document.addEventListener('touchstart', (e) => {
+      if (e.touches.length > 1) {
+        e.preventDefault();
+      }
+    }, { passive: false });
+
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', (e) => {
+      const now = Date.now();
+      if (now - lastTouchEnd <= 300 && !e.target.classList.contains('zoomable')) {
+        e.preventDefault();
+      }
+      lastTouchEnd = now;
+    }, { passive: false });
+
+    // Smooth scrolling for anchor links with mobile optimization
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          const offsetTop = target.offsetTop - (isMobile() ? 80 : 100);
+          window.scrollTo({
+            top: offsetTop,
+            behavior: 'smooth'
+          });
+        }
+      });
+    });
+
+    // Performance monitoring for mobile devices
+    if (isMobile() && 'performance' in window) {
+      // Reduce animation complexity if device is struggling
+      window.addEventListener('load', () => {
+        setTimeout(() => {
+          const perfData = performance.getEntriesByType('navigation')[0];
+          if (perfData && perfData.loadEventEnd - perfData.loadEventStart > 3000) {
+            // Slow device detected, reduce animations
+            const style = document.createElement('style');
+            style.textContent = `
+              .floating-logo, .floating-logo-2, .hero-floating-logo {
+                animation: none !important;
+                opacity: 0.01 !important;
+              }
+              .reveal {
+                transition-duration: 0.3s !important;
+              }
+            `;
+            document.head.appendChild(style);
+          }
+        }, 1000);
+      });
+    }
+
+    // Image loading optimization
+    function optimizeImages() {
+      // Add loading states for images
+      const images = document.querySelectorAll('img');
+      images.forEach(img => {
+        img.addEventListener('load', () => {
+          img.style.opacity = '1';
+        });
+        
+        img.addEventListener('error', () => {
+          // Create fallback placeholder
+          const placeholder = document.createElement('div');
+          placeholder.className = 'img-placeholder';
+          placeholder.style.height = img.style.height || '200px';
+          placeholder.textContent = '🖼️ Image';
+          img.parentNode.replaceChild(placeholder, img);
+        });
+      });
+    }
+
+    // Progressive Web App features
+    if ('serviceWorker' in navigator && !isMobile()) {
+      // Only register service worker on desktop for now
+      // window.addEventListener('load', () => {
+      //   navigator.serviceWorker.register('/sw.js');
+      // });
+    }
+
+    // Initialize optimizations
+    document.addEventListener('DOMContentLoaded', () => {
+      optimizeImages();
+    });
+  </script>
+</body>
+</html>
